@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"reflect"
 	"syscall"
 	"unsafe"
 
@@ -34,6 +35,7 @@ func main() {
 		if n == 0 {
 			continue
 		}
+		data = data[:n]
 		ethHeader := eth.Parse(data)
 		if ethHeader == nil {
 			log.Printf("Failed to parse Ethernet header")
@@ -47,7 +49,6 @@ func main() {
 			fd.Write(replyEth.Bytes())
 		}
 		if ethHeader.IsIP() {
-			log.Printf("ip")
 			ipHeader := ip.Parse(ethHeader.Payload)
 			if !ipHeader.Checksum() {
 				log.Printf("ip checksum failed")
@@ -58,9 +59,15 @@ func main() {
 				log.Printf("tcpHeader is nil")
 				continue
 			}
-			log.Printf("%s", tcpHeader.String())
+			if !reflect.DeepEqual(tcpHeader.Bytes(), ipHeader.Payload) {
+				log.Printf(`
+tcpHeader.Bytes() [% x] not equal 
+ipHeader.Payload [% x]`, tcpHeader.Bytes(), ipHeader.Payload)
+
+				// continue
+			}
+			tcpHeader.Checksum(ipHeader.SAddr, ipHeader.DAddr, ipHeader.Proto, ipHeader.Len)
 		}
-		log.Printf("unknown type %d", ethHeader.Typ)
 	}
 }
 

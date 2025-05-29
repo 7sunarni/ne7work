@@ -10,7 +10,13 @@ func ByteToUint16(data0 byte, data1 byte) uint16 {
 }
 
 func Uint16ToBytes(data uint16) []byte {
-	return []byte{byte(data >> 8), byte(data & 0xFF)}
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, data)
+	return b
+}
+
+func Uint32ToBytes(data uint32) []byte {
+	return []byte{byte(data >> 24), byte(data >> 16), byte(data >> 8), byte(data & 0xFF)}
 }
 
 func IpV4Format(data [4]byte) string {
@@ -30,7 +36,9 @@ func Checksum(data []byte) uint16 {
 	if length%2 != 0 {
 		sum += uint32(data[length-1]) << 8
 	}
-	sum = (sum >> 16) + (sum & 0xFFFF)
-	sum = sum + (sum >> 16)
+	if sum > 0xFFFF {
+		sum = (sum >> 16) + (sum & 0xFFFF)
+
+	}
 	return uint16(^sum)
 }

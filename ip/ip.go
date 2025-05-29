@@ -55,7 +55,7 @@ func Parse(ip []byte) *Header {
 		HL:         ip[0] & 0x0f,
 		Version:    ip[0] >> 4,
 		Tos:        ip[1],
-		Len:        uint16(ip[2])<<8 | uint16(ip[3]),
+		Len:        utils.ByteToUint16(ip[2], ip[3]),
 		Id:         uint16(ip[4])<<8 | uint16(ip[5]),
 		FragOffset: utils.ByteToUint16(ip[6], ip[7]),
 		TTL:        ip[8],

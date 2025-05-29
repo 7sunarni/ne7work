@@ -61,7 +61,7 @@ func TestParseOptions(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		got := ParseOptions(tc.payload)
+		got := NewPayloadParser(tc.payload).parse().Options
 		if !got.Equal(&tc.expect) {
 			t.Errorf("expect %v, got %v", tc.expect, got)
 		}
@@ -82,25 +82,32 @@ func TestOptionReply(t *testing.T) {
 					Data: []byte{0x05, 0x82},
 				},
 				{
-					Kind: 0x2,
-					Len:  BytePtr(0x04),
-					Data: []byte{0x05, 0x82},
+					Kind: 0x4,
+					Len:  BytePtr(0x02),
+					Data: []byte{},
 				},
 				{
-					Kind: 0x2,
-					Len:  BytePtr(0x04),
-					Data: []byte{0x05, 0x82},
+					Kind: 0x8,
+					Len:  BytePtr(0x0a),
+					Data: []byte{0x4e, 0xa1, 0x7b, 0xe5, 0x4e, 0xa1, 0x7b, 0xe5},
 				},
 				{
-					Kind: 0x2,
-					Len:  BytePtr(0x04),
-					Data: []byte{0x05, 0x82},
+					Kind: 0x1,
+					Len:  nil,
+					Data: nil,
+				},
+				{
+					Kind: 0x3,
+					Len:  BytePtr(0x03),
+					Data: []byte{0x07},
 				},
 			},
 		},
 	}
 	for _, tc := range testCases {
-		options := ParseOptions(tc.payload)
-		options.Reply()
+		options := NewPayloadParser(tc.payload).parse().Options
+		if !options.Reply().Equal(&tc.expect) {
+			t.Errorf("expect %v, got %v", tc.expect, options.Reply())
+		}
 	}
 }

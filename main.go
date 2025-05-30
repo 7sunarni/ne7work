@@ -66,7 +66,7 @@ ipHeader.Payload [% x]`, tcpHeader.Bytes(), ipHeader.Payload)
 
 				// continue
 			}
-			tcpHeader.Checksum(ipHeader.SAddr, ipHeader.DAddr, ipHeader.Proto, ipHeader.Len)
+			tcpHeader.Checksum(ipHeader.SAddr, ipHeader.DAddr, ipHeader.Proto, uint16(len(ipHeader.Payload)))
 		}
 	}
 }

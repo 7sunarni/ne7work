@@ -28,17 +28,16 @@ func Checksum(data []byte) uint16 {
 	var sum uint32
 	length := len(data)
 	for i := 0; i < length-1; i += 2 {
-		sum += uint32(data[i])<<8 | uint32(data[i+1])
+		sum += uint32(binary.BigEndian.Uint16([]byte{data[i], data[i+1]}))
 		if sum > 0xFFFF {
 			sum = (sum >> 16) + (sum & 0xFFFF)
 		}
 	}
 	if length%2 != 0 {
-		sum += uint32(data[length-1]) << 8
+		sum += uint32(data[length-1])
 	}
 	if sum > 0xFFFF {
 		sum = (sum >> 16) + (sum & 0xFFFF)
-
 	}
 	return uint16(^sum)
 }

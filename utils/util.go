@@ -19,6 +19,10 @@ func Uint32ToBytes(data uint32) []byte {
 	return []byte{byte(data >> 24), byte(data >> 16), byte(data >> 8), byte(data & 0xFF)}
 }
 
+func BytesToUint32(data [4]byte) uint32 {
+	return binary.BigEndian.Uint32(data[:])
+}
+
 func IpV4Format(data [4]byte) string {
 	template := "%d.%d.%d.%d"
 	return fmt.Sprintf(template, data[0], data[1], data[2], data[3])

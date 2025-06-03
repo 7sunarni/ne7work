@@ -43,10 +43,10 @@ func main() {
 		}
 		if ethHeader.IsArp() {
 			arpHeader := arp.Parse(ethHeader.Payload)
-			replyEth := ethHeader.Reply()
-			replyEth.SMac = cons.DeviceMac
-			replyEth.Payload = arpHeader.Reply().Bytes()
-			fd.Write(replyEth.Bytes())
+			ethReply := ethHeader.Reply()
+			ethReply.SMac = cons.DeviceMac
+			ethReply.Payload = arpHeader.Reply().Bytes()
+			fd.Write(ethReply.Bytes())
 		}
 		if ethHeader.IsIP() {
 			ipHeader := ip.Parse(ethHeader.Payload)
@@ -66,7 +66,23 @@ ipHeader.Payload [% x]`, tcpHeader.Bytes(), ipHeader.Payload)
 
 				// continue
 			}
-			tcpHeader.Checksum(ipHeader.SAddr, ipHeader.DAddr, ipHeader.Proto, uint16(len(ipHeader.Payload)))
+			if !tcpHeader.Checksum(ipHeader.SAddr, ipHeader.DAddr, ipHeader.Proto, uint16(len(ipHeader.Payload))) {
+				log.Printf("tcp checksum failed")
+				continue
+			}
+			tcpReply := tcp.Handle(*ipHeader, tcpHeader)
+			if tcpReply == nil {
+				log.Printf("tcpReply is nil")
+				continue
+			}
+
+			ipReply := ipHeader.Reply()
+			ipReply.Payload = tcpReply
+
+			ethReply := ethHeader.Reply()
+			ethReply.SMac = cons.DeviceMac
+			ethReply.Payload = ipReply.Bytes()
+			fd.Write(ethReply.Bytes())
 		}
 	}
 }

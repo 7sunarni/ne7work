@@ -3,6 +3,7 @@ package tcp
 import (
 	"fmt"
 	"log"
+	"math/rand"
 
 	"github.com/7sunarni/ne7work/utils"
 )
@@ -14,11 +15,11 @@ type Header struct {
 	AckSeq       uint32
 	Reserved     byte
 	HeaderLength byte
-	Flags
-	Win  uint16
-	CSum uint16
-	Urp  uint16
-	Payload
+	Flags        Flags
+	Win          uint16
+	CSum         uint16
+	Urp          uint16
+	Payload      Payload
 }
 
 func (h *Header) Bytes() []byte {
@@ -73,13 +74,11 @@ AckSeq: %d
 /*
 https://www.securitynik.com/2015/08/calculating-udp-checksum-with-taste-of_3.html
 */
-func (h *Header) Checksum(Sip [4]byte, Dip [4]byte, protocol byte, length uint16) bool {
+
+func (h *Header) checksum(Sip [4]byte, Dip [4]byte, protocol byte, length uint16) uint16 {
 	checksum := h.CSum
 	h.CSum = 0
 
-	if checksum == 0 {
-		return true
-	}
 	check := make([]byte, 0)
 	/*
 		pseudo header
@@ -98,5 +97,34 @@ func (h *Header) Checksum(Sip [4]byte, Dip [4]byte, protocol byte, length uint16
 	h.CSum = checksum
 
 	ret := utils.Checksum(check[:])
-	return ret == checksum
+	return ret
+}
+func (h *Header) Checksum(Sip [4]byte, Dip [4]byte, protocol byte, length uint16) bool {
+	checksum := h.CSum
+	if checksum == 0 {
+		return true
+	}
+	return h.checksum(Sip, Dip, protocol, length) == checksum
+}
+
+func (h *Header) Reply() *Header {
+	ret := &Header{
+		SPort:        h.DPort,
+		DPort:        h.SPort,
+		Seq:          rand.Uint32(),
+		AckSeq:       h.Seq + 1,
+		Reserved:     h.Reserved,
+		HeaderLength: h.HeaderLength,
+		Flags:        Flags{},
+		Win:          0,
+		CSum:         0,
+		Urp:          0,
+		Payload: Payload{
+			Options: *h.Payload.Options.Reply(),
+			Data:    make([]byte, 0),
+		},
+	}
+
+	return ret
+
 }
